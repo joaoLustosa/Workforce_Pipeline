@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Data
+data/raw/*
+data/staging/*
+data/curated/*
+
+# Keep structure, not files
+!data/raw/.gitkeep
+!data/staging/.gitkeep
+!data/curated/.gitkeep
