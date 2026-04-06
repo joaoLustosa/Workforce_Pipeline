@@ -1,6 +1,7 @@
 from src.ingestion.load_raw import load_raw
 from src.transformation.transform_caged import transform
 from src.storage.save import save_parquet
+from src.config.settings import STAGING_PATH
 
 def main():
     df = load_raw()

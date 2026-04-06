@@ -1,4 +1,4 @@
-import pandas as pd
+import pandas.pandas as pd
 from pathlib import Path
 
 DATA_PATH = Path("data/raw/sample_2000.txt")

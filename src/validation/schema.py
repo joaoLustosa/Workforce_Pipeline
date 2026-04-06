@@ -59,13 +59,13 @@ schema = pa.DataFrameSchema(
     },
     checks=[
         Check(
-            lambda df: (
-                df["competencia_exc"].isna()
-                | df["competencia_mov"].isna()
-                | (df["competencia_exc"] >= df["competencia_mov"])
-            )
+          lambda df: (
+            (df["competencia_exc"] >= df["competencia_mov"])
+            | df["competencia_exc"].isna()
+            | df["competencia_mov"].isna()
+          )
         )
     ],
     strict=False,
-    ordered=True
+    ordered=False
 )

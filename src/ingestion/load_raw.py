@@ -7,6 +7,6 @@ def load_raw(filename: str = "sample_2000.txt") -> pd.DataFrame:
     return pd.read_csv(
         path,
         sep=";",
-        encoding="latin1",   # Maybe change to utf-8
+        encoding="utf-8",
         dtype=str
     )
