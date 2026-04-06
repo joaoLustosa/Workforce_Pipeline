@@ -3,6 +3,10 @@
 __pycache__/
 *.pyc
 
+# Visual Studio
+*.code-workspace
+.vscode/
+
 # Data
 data/raw/*
 data/staging/*
