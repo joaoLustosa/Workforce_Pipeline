@@ -20,6 +20,7 @@ def transform(df):
 
   # Convert types
   apply_dates(df)
+  df["competencia_mov_partition"] = df["competencia_mov"].dt.strftime("%Y-%m") # Partition ready formatting
   apply_ints(df)
   apply_floats(df)
   apply_bools(df)

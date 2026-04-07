@@ -5,6 +5,7 @@ schema = pa.DataFrameSchema(
     {
         # Dates
         "competencia_mov": Column(pa.DateTime, nullable=True),
+        "competencia_mov_partition": Column(pa.String, nullable=True),
         "competencia_dec": Column(pa.DateTime, nullable=True),
         "competencia_exc": Column(pa.DateTime, nullable=True),
 

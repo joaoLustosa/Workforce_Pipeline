@@ -1,7 +1,8 @@
 from src.ingestion.load_raw import load_raw
 from src.transformation.transform_caged import transform
-from src.storage.save import save_parquet
-from src.config.settings import STAGING_PATH
+from src.curation.aggregate_caged import aggregate_employment_by_uf
+from src.storage.save import save_parquet_partitioned
+from src.config.settings import STAGING_PATH, CURATED_PATH
 
 def main():
     df = load_raw()
@@ -10,8 +11,14 @@ def main():
     df = transform(df)
     print(f"[INFO] Rows after transform: {len(df)}")
 
-    save_parquet(df, f"{STAGING_PATH}/caged.parquet")
-    print("[INFO] Data saved to staging")
+    df_curated = aggregate_employment_by_uf(df)
+
+    save_parquet_partitioned(df, f"{STAGING_PATH}/caged")
+
+    save_parquet_partitioned(
+    df_curated,
+    f"{CURATED_PATH}/caged_employment_by_uf"
+    )
 
     print(df.columns.tolist())
 
