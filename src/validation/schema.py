@@ -5,14 +5,14 @@ from pandera import Column, Check
 schema = pa.DataFrameSchema(
     {
         # Dates
-        "competencia_mov": Column(pa.DateTime, nullable=True),
+        "competencia_mov": Column(pa.DateTime, nullable=False),
         "competencia_mov_partition": Column(pa.String, nullable=True),
         "competencia_dec": Column(pa.DateTime, nullable=True),
         "competencia_exc": Column(pa.DateTime, nullable=True, required=False),
 
         # Location / identifiers
         "regiao": Column(pa.Int64, nullable=True),
-        "uf": Column(pa.Int64, nullable=True),
+        "uf": Column(pa.Int64, nullable=False),
         "municipio": Column(pa.Int64, nullable=True),
 
         # CNAE
@@ -20,7 +20,7 @@ schema = pa.DataFrameSchema(
         "subclasse": Column(pa.Int64, nullable=True),
 
         # Movement
-        "saldo_movimentacao": Column(pa.Int64, nullable=True),
+        "saldo_movimentacao": Column(pa.Int64, nullable=False),
         "tipo_movimentacao": Column(pa.Int64, nullable=True),
 
         # Worker classification

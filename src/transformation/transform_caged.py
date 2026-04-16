@@ -1,4 +1,5 @@
 import pandas as pd
+from pandera.errors import SchemaErrors
 from src.validation.schema import schema
 from src.transformation.cleaning import normalize_columns
 from src.transformation.parsing import (
@@ -13,6 +14,8 @@ from src.config.data_contract import (
     OPTIONAL_COLUMNS,
     COLUMN_THRESHOLDS
 )
+from src.validation.rejects import save_rejects
+from src.config.settings import REJECTS_PATH
 
 # -------------------------
 # PIPELINE STAGES
@@ -24,13 +27,7 @@ def transform(df):
     df = normalize_columns(df)
     df = rename_columns(df)
 
-    REQUIRED_COLUMNS = [
-    "competencia_mov",
-    "uf",
-    "saldo_movimentacao"
-    ]
-
-    missing = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+    missing = [col for col in CRITICAL_COLUMNS if col not in df.columns]
 
     if missing:
       raise ValueError(f"Missing critical columns: {missing}")
@@ -38,6 +35,15 @@ def transform(df):
     df = cast_types(df)
 
     df["competencia_mov_partition"] = df["competencia_mov"].dt.strftime("%Y-%m")
+
+    original_len = len(df)
+
+    df, failure_cases = validate_with_rejects(df)
+
+    print(f"[INFO] Rows removed: {original_len - len(df)}")
+
+    if failure_cases is not None:
+      save_rejects(failure_cases, REJECTS_PATH)
 
     df = validate(df)
 
@@ -58,11 +64,6 @@ def cast_types(df):
 
 
 def validate(df):
-    try:
-        schema.validate(df, lazy=True)
-    except Exception as e:
-        print("[WARNING] Data validation issues detected")
-        print(e)
 
     if df["competencia_mov"].isna().all():
         raise ValueError("Critical failure: competencia_mov is entirely null")
@@ -70,6 +71,28 @@ def validate(df):
     report_quality(df)
 
     return df
+
+def validate_with_rejects(df):
+    try:
+        schema.validate(df, lazy=True)
+
+    except SchemaErrors as e:
+        print("[WARNING] Schema validation issues detected")
+
+        failure_df = e.failure_cases
+
+        invalid_idx = failure_df["index"].unique()
+        df = df.drop(index=invalid_idx)
+
+        return df, failure_df
+
+    for col in CRITICAL_COLUMNS:
+        null_idx = df[df[col].isna()].index
+        if len(null_idx) > 0:
+            print(f"[WARNING] Dropping {len(null_idx)} rows due to nulls in {col}")
+            df = df.drop(index=null_idx)
+
+    return df, None
 
 def report_quality(df):
     print("\n[DATA QUALITY REPORT]")
@@ -86,9 +109,7 @@ def report_quality(df):
         threshold = COLUMN_THRESHOLDS.get(col)
 
         if col in CRITICAL_COLUMNS:
-            print(f"[CRITICAL] {col}: {pct}% nulls")
-            if pct > 0:
-                errors.append(f"{col} has nulls but is critical")
+          print(f"[INFO] {col}: {pct}% (already enforced upstream)")
 
         elif threshold is not None:
             if pct > threshold:
@@ -191,24 +212,3 @@ def apply_if_exists(df, col, func):
     if col in df.columns:
         df[col] = func(df[col])
 
-
-# -------------------------
-# SCHEMA SHAPE ALIGNMENT
-# -------------------------
-
-def ensure_schema_columns(df):
-    dtype_map = {
-        "DateTime": "datetime64[ns]",
-        "Int64": "Int64",
-        "Float": "float64",
-        "String": "string",
-        "Bool": "boolean",
-    }
-
-    for col, col_schema in schema.columns.items():
-        if col not in df.columns:
-            pa_dtype = type(col_schema.dtype).__name__
-            pd_dtype = dtype_map.get(pa_dtype, "object")
-            df[col] = pd.Series([pd.NA] * len(df), dtype=pd_dtype)
-
-    return df
