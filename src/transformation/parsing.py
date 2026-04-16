@@ -16,8 +16,7 @@ def parse_bool(series):
         series.astype("string")
         .str.strip()
         .map({"1": True, "0": False})
-        .fillna(False)  # <-- DECISION: missing = False
-        .astype(bool)
+        .astype("boolean")  # preserves <NA>
     )
 
 def parse_yyyymm(series):

@@ -1,3 +1,4 @@
+import pandas as pd
 import pandera.pandas as pa
 from pandera import Column, Check
 
@@ -38,11 +39,11 @@ schema = pa.DataFrameSchema(
         "tamestabjan": Column(pa.Int64, nullable=True),
 
         # Flags
-        "ind_trab_intermitente": Column(pa.Bool, nullable=True),
-        "ind_trab_parcial": Column(pa.Bool, nullable=True),
-        "indicador_aprendiz": Column(pa.Bool, nullable=True),
-        "indicador_de_exclusao": Column(pa.Bool, nullable=True),
-        "indicador_fora_do_prazo": Column(pa.Bool, nullable=True),
+        "ind_trab_intermitente": Column(pd.BooleanDtype(), nullable=True),
+        "ind_trab_parcial": Column(pd.BooleanDtype(), nullable=True),
+        "indicador_aprendiz": Column(pd.BooleanDtype(), nullable=True),
+        "indicador_de_exclusao": Column(pd.BooleanDtype(), nullable=True),
+        "indicador_fora_do_prazo": Column(pd.BooleanDtype(), nullable=True),
 
         # Disability
         "tipo_deficiencia": Column(pa.Int64, nullable=True),
