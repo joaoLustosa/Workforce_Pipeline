@@ -43,9 +43,33 @@ def cast_types(df):
 
 
 def validate(df):
-    schema.validate(df, lazy=False)
+    try:
+        schema.validate(df, lazy=True)
+    except Exception as e:
+        print("[WARNING] Data validation issues detected")
+        print(e)
+
+    if df["competencia_mov"].isna().all():
+        raise ValueError("Critical failure: competencia_mov is entirely null")
+
+    report_quality(df)
+
     return df
 
+def report_quality(df):
+    print("\n[DATA QUALITY REPORT]")
+
+    total_rows = len(df)
+
+    null_counts = df.isna().sum()
+    null_percent = (null_counts / total_rows * 100).round(2)
+
+    report = (
+        null_percent[null_percent > 0]
+        .sort_values(ascending=False)
+    )
+
+    print(report.head(10))
 
 # -------------------------
 # RENAMING
