@@ -7,6 +7,12 @@ from src.transformation.parsing import (
     parse_yyyymm,
     parse_int
 )
+from src.config.data_contract import (
+    CRITICAL_COLUMNS,
+    IMPORTANT_COLUMNS,
+    OPTIONAL_COLUMNS,
+    COLUMN_THRESHOLDS
+)
 
 # -------------------------
 # PIPELINE STAGES
@@ -18,7 +24,16 @@ def transform(df):
     df = normalize_columns(df)
     df = rename_columns(df)
 
-    df = ensure_schema_columns(df)
+    REQUIRED_COLUMNS = [
+    "competencia_mov",
+    "uf",
+    "saldo_movimentacao"
+    ]
+
+    missing = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+
+    if missing:
+      raise ValueError(f"Missing critical columns: {missing}")
 
     df = cast_types(df)
 
@@ -60,16 +75,36 @@ def report_quality(df):
     print("\n[DATA QUALITY REPORT]")
 
     total_rows = len(df)
+    null_percent = (df.isna().sum() / total_rows * 100).round(2)
 
-    null_counts = df.isna().sum()
-    null_percent = (null_counts / total_rows * 100).round(2)
+    errors = []
 
-    report = (
-        null_percent[null_percent > 0]
-        .sort_values(ascending=False)
-    )
+    for col, pct in null_percent.items():
+        if pct == 0:
+            continue
 
-    print(report.head(10))
+        threshold = COLUMN_THRESHOLDS.get(col)
+
+        if col in CRITICAL_COLUMNS:
+            print(f"[CRITICAL] {col}: {pct}% nulls")
+            if pct > 0:
+                errors.append(f"{col} has nulls but is critical")
+
+        elif threshold is not None:
+            if pct > threshold:
+                print(f"[FAIL] {col}: {pct}% > {threshold}%")
+                errors.append(f"{col} exceeds threshold")
+            else:
+                print(f"[WARNING] {col}: {pct}%")
+
+        elif col in IMPORTANT_COLUMNS:
+            print(f"[WARNING] {col}: {pct}%")
+
+        else:
+            print(f"[INFO] {col}: {pct}%")
+
+    if errors:
+        raise ValueError(f"Data quality check failed: {errors}")
 
 # -------------------------
 # RENAMING

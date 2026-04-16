@@ -8,7 +8,7 @@ schema = pa.DataFrameSchema(
         "competencia_mov": Column(pa.DateTime, nullable=True),
         "competencia_mov_partition": Column(pa.String, nullable=True),
         "competencia_dec": Column(pa.DateTime, nullable=True),
-        "competencia_exc": Column(pa.DateTime, nullable=True),
+        "competencia_exc": Column(pa.DateTime, nullable=True, required=False),
 
         # Location / identifiers
         "regiao": Column(pa.Int64, nullable=True),
@@ -42,7 +42,7 @@ schema = pa.DataFrameSchema(
         "ind_trab_intermitente": Column(pd.BooleanDtype(), nullable=True),
         "ind_trab_parcial": Column(pd.BooleanDtype(), nullable=True),
         "indicador_aprendiz": Column(pd.BooleanDtype(), nullable=True),
-        "indicador_de_exclusao": Column(pd.BooleanDtype(), nullable=True),
+        "indicador_de_exclusao": Column(pd.BooleanDtype(), nullable=True, required=False),
         "indicador_fora_do_prazo": Column(pd.BooleanDtype(), nullable=True),
 
         # Disability
@@ -62,9 +62,12 @@ schema = pa.DataFrameSchema(
     checks=[
         Check(
           lambda df: (
-            (df["competencia_exc"] >= df["competencia_mov"])
-            | df["competencia_exc"].isna()
-            | df["competencia_mov"].isna()
+            True if "competencia_exc" not in df.columns
+            else (
+              (df["competencia_exc"] >= df["competencia_mov"])
+              | df["competencia_exc"].isna()
+              | df["competencia_mov"].isna()
+            )
           )
         )
     ],
